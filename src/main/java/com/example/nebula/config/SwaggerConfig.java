@@ -28,19 +28,11 @@ public class SwaggerConfig implements WebMvcConfigurer {
 
     @Bean
     public Docket createRestApi() {
-        // 添加全局参数token令牌
-        List<RequestParameter> requestParameter = new ArrayList<>();
-        requestParameter.add(new RequestParameterBuilder()
-            .name("token")
-            .description("令牌")
-            .required(false)
-            .in(ParameterType.HEADER)
-            .build());
         return new Docket(DocumentationType.OAS_30)
             .apiInfo(apiInfo()).select()
             .apis(RequestHandlerSelectors.withMethodAnnotation(ApiOperation.class))
             .paths(PathSelectors.any())
-            .build().globalRequestParameters(requestParameter);
+            .build();
     }
 
 

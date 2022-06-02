@@ -37,6 +37,7 @@ public class TagEdgeController {
 
 
     @PostMapping("/createIndex")
+    @ApiOperation("创建索引")
     public R<List<CommonVo>> createIndex(@RequestBody GraphCreateIndex graphCreateIndex) {
         return R.data(graphCommonService.executeJson(NebulaUtil.createIndex(graphCreateIndex), CommonVo.class));
     }
