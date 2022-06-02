@@ -1,0 +1,7 @@
+
+
+nebula:
+  userName: root
+  password: nebula
+  # 我本地配置的host映射  test.ht.cdh.worker4 10.0.59.64
+  hostAddresses[0]: test.ht.cdh.worker4:9669
