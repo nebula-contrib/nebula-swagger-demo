@@ -82,7 +82,7 @@ public class NebulaUtil {
         StringBuffer stringBuffer = new StringBuffer();
         List<PropertyBean> propertyList = graphCreateTagEdge.getPropertyList();
         if (CollectionUtil.isNotEmpty(propertyList)) {
-            stringBuffer.append("(");
+            //stringBuffer.append("(");
             for (int i = 0; i < propertyList.size(); i++) {
 
                 PropertyBean propertyBean = propertyList.get(i);
@@ -92,12 +92,12 @@ public class NebulaUtil {
                     stringBuffer.append(",");
                 }
             }
-            stringBuffer.append(")");
+            //stringBuffer.append(")");
         }
         String bufferString = stringBuffer.toString();
         log.debug("stringBuffer :{}", bufferString);
 
-        String createTag = String.format("USE `%s`;CREATE %s `%s` " + bufferString + "  COMMENT = '%s' ",
+        String createTag = String.format("USE `%s`;CREATE %s `%s` ( " + bufferString + " ) COMMENT = '%s' ",
             graphCreateTagEdge.getSpace(), graphCreateTagEdge.getType(), graphCreateTagEdge.getTagEdgeName(), graphCreateTagEdge.getTagEdgeComment());
         log.debug("创建Tag-gql语句:{}", createTag);
         return createTag;
@@ -113,7 +113,7 @@ public class NebulaUtil {
         StringBuffer stringBuffer = getStringBuffer(tagValueList);
         String bufferString = stringBuffer.toString();
         log.debug("stringBuffer :{}", bufferString);
-        String createPoint = String.format("USE `%s`;INSERT VERTEX IF NOT EXISTS %s(%s) VALUES '%s':" + bufferString + ";"
+        String createPoint = String.format("USE `%s`;INSERT VERTEX IF NOT EXISTS %s(%s) VALUES '%s':(" + bufferString + ");"
             , graphCreateVertex.getSpace(), graphCreateVertex.getTagName(), Joiner.on(",").join(graphCreateVertex.getTagList()),
             graphCreateVertex.getPointKey());
         log.debug("创建vertex-gql语句:{}", createPoint);
@@ -233,7 +233,7 @@ public class NebulaUtil {
         String bufferString = stringBuffer.toString();
         log.debug("stringBuffer :{}", bufferString);
 
-        String insertEdge = String.format("USE `%s`; INSERT EDGE IF NOT EXISTS %s (%s) VALUES '%s'->'%s':%s;"
+        String insertEdge = String.format("USE `%s`; INSERT EDGE IF NOT EXISTS %s (%s) VALUES '%s'->'%s':( %s );"
             , graphInsertEdge.getSpace(), graphInsertEdge.getEdgeName(), Joiner.on(",").join(graphInsertEdge.getEdgeList()),
             graphInsertEdge.getSrcVid(), graphInsertEdge.getDstVid(), bufferString);
         log.debug("插入边 -gql语句:{}", insertEdge);
@@ -248,7 +248,7 @@ public class NebulaUtil {
     private static StringBuffer getStringBuffer(List<Object> edgeValueList) {
         StringBuffer stringBuffer = new StringBuffer();
         if (CollectionUtil.isNotEmpty(edgeValueList)) {
-            stringBuffer.append("(");
+            //stringBuffer.append("(");
             for (int i = 0; i < edgeValueList.size(); i++) {
                 Object value = edgeValueList.get(i);
                 if (value instanceof String) {
@@ -260,7 +260,7 @@ public class NebulaUtil {
                     stringBuffer.append(",");
                 }
             }
-            stringBuffer.append(")");
+            //stringBuffer.append(")");
         }
         return stringBuffer;
     }
