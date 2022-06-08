@@ -7,6 +7,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -24,6 +26,6 @@ public class GraphDelAttribute {
     @ApiModelProperty(value = "属性名称", example = "t1",required = true)
     private String attributeName;
 
-    @ApiModelProperty(value = "tag/edge的属性名称", example = "p5")
-    private String propertyName;
+    @ApiModelProperty(value = "tag/edge的属性名称 支持批量")
+    private List<String> propertyNameList;
 }

@@ -2,6 +2,7 @@ package com.example.nebula.util;
 
 
 import cn.hutool.core.collection.CollectionUtil;
+import com.example.nebula.constant.AttributeEnum;
 import com.example.nebula.constant.ConditionEnum;
 import com.example.nebula.constant.EdgeDirectionEnum;
 import com.example.nebula.dto.graph.*;
@@ -20,7 +21,14 @@ public class NebulaUtil {
      * @Param [GraphShowAttribute]
      **/
     public static String showAttributes(GraphShowAttribute graphShowAttribute) {
-        String showSpaces = String.format("USE `%s`;SHOW %s;", graphShowAttribute.getSpace(), graphShowAttribute.getAttribute());
+
+        String showSpaces = "";
+        if (AttributeEnum.SPACES.name().equalsIgnoreCase(graphShowAttribute.getAttribute())) {
+            showSpaces = String.format("SHOW %s;", graphShowAttribute.getAttribute());
+        } else {
+            showSpaces = String.format("USE `%s`;SHOW %s;", graphShowAttribute.getSpace(), graphShowAttribute.getAttribute());
+        }
+
         log.info("查询{}-gql语句:{}", graphShowAttribute.getAttribute(), showSpaces);
         return showSpaces;
     }
@@ -80,7 +88,7 @@ public class NebulaUtil {
      **/
     public static String createTagEdge(GraphCreateTagEdge graphCreateTagEdge) {
         StringBuffer stringBuffer = new StringBuffer();
-        List<PropertyBean> propertyList = graphCreateTagEdge.getPropertyList();
+        java.util.List<PropertyBean> propertyList = graphCreateTagEdge.getPropertyList();
         if (CollectionUtil.isNotEmpty(propertyList)) {
             //stringBuffer.append("(");
             for (int i = 0; i < propertyList.size(); i++) {
@@ -109,7 +117,7 @@ public class NebulaUtil {
      * @Param [graphCreateVertex]
      **/
     public static String createPoint(GraphCreateVertex graphCreateVertex) {
-        List<Object> tagValueList = graphCreateVertex.getTagValueList();
+        java.util.List<Object> tagValueList = graphCreateVertex.getTagValueList();
         StringBuffer stringBuffer = getStringBuffer(tagValueList);
         String bufferString = stringBuffer.toString();
         log.info("stringBuffer :{}", bufferString);
@@ -148,7 +156,7 @@ public class NebulaUtil {
      * @Param [graphAddAttribute]
      **/
     public static String addAttributeProperty(GraphAddAttribute graphAddAttribute) {
-        String addAttributeProperty = String.format("USE `%s`;ALTER %s `%s` ADD (`%s` %s %s %s '%s');"
+        String addAttributeProperty = String.format("USE `%s`;ALTER %s `%s` ADD (`%s` %s %s %s %s);"
             , graphAddAttribute.getSpace(), graphAddAttribute.getAttribute(), graphAddAttribute.getAttributeName(),
             graphAddAttribute.getPropertyName(), graphAddAttribute.getPropertyType(),
             graphAddAttribute.getIsNull(), graphAddAttribute.getDefaultValue(), graphAddAttribute.getCommon());
@@ -163,9 +171,20 @@ public class NebulaUtil {
      * @Param [graphDelAttribute]
      **/
     public static String delAttributeProperty(GraphDelAttribute graphDelAttribute) {
-        String delAttributeProperty = String.format("USE `%s`; ALTER %s `%s` DROP (`%s`);"
+
+        StringBuffer stringBuffer = new StringBuffer();
+        List<String> propertyNameList = graphDelAttribute.getPropertyNameList();
+        for (int i = 0; i < propertyNameList.size(); i++) {
+            String value = propertyNameList.get(i);
+            stringBuffer.append("`" + value + "`");
+            if (propertyNameList.size() > 1 && (i + 1) != propertyNameList.size()) {
+                stringBuffer.append(",");
+            }
+        }
+
+        String delAttributeProperty = String.format("USE `%s`; ALTER %s `%s` DROP (%s);"
             , graphDelAttribute.getSpace(), graphDelAttribute.getAttribute(),
-            graphDelAttribute.getAttributeName(), graphDelAttribute.getPropertyName());
+            graphDelAttribute.getAttributeName(), stringBuffer.toString());
         log.info("删除某个属性的 子属性 -gql语句:{}", delAttributeProperty);
         return delAttributeProperty;
     }
@@ -355,14 +374,33 @@ public class NebulaUtil {
     }
 
     /**
+     * @return java.lang.String
      * @Description 属性详细信息
      * @Param [graphShowInfo]
-     * @return java.lang.String
      **/
     public static String showCreateAttributeInfo(GraphShowInfo graphShowInfo) {
         String showCreateAttributeInfo = String.format("USE `%s`; SHOW CREATE %s `%s`;"
             , graphShowInfo.getSpace(), graphShowInfo.getAttribute(), graphShowInfo.getAttributeName());
         log.info("查询属性的详细信息 -gql语句:{}", showCreateAttributeInfo);
         return showCreateAttributeInfo;
+    }
+
+    public static String showAttributePage(GraphPageAttribute graphPageAttribute) {
+
+        int skip = (graphPageAttribute.getPageNum() - 1) * graphPageAttribute.getPageSize();
+        if (AttributeEnum.TAGS.name().equalsIgnoreCase(graphPageAttribute.getAttribute())) {
+            String showAttributePage = String.format("USE `%s`; MATCH (v) RETURN v SKIP %s LIMIT %s;"
+                , graphPageAttribute.getSpace(), skip, graphPageAttribute.getPageSize());
+            log.info("查询tag分页 -gql语句:{}", showAttributePage);
+            return showAttributePage;
+        }
+
+        if (AttributeEnum.EDGES.name().equalsIgnoreCase(graphPageAttribute.getAttribute())) {
+            String showAttributePage = String.format("USE `%s`;MATCH ()<-[e]-() RETURN e SKIP %s LIMIT %s;"
+                , graphPageAttribute.getSpace(), skip, graphPageAttribute.getPageSize());
+            log.info("查询edge分页 -gql语句:{}", showAttributePage);
+            return showAttributePage;
+        }
+        return "";
     }
 }
