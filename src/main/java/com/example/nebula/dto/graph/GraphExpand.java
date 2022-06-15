@@ -39,8 +39,8 @@ public class GraphExpand {
     @Min(1)
     private Integer resultSize = Integer.MAX_VALUE;
 
-    @ApiModelProperty(value = "扩展点id", example = "11", required = true)
-    private String vid;
+    @ApiModelProperty(value = "扩展点id集合", required = true)
+    private List<String> vidList;
 
 
     public String getStepEndResult() {
@@ -48,5 +48,17 @@ public class GraphExpand {
             return ".." + stepEnd;
         }
         return "";
+    }
+
+    public String getVidList() {
+        StringBuffer stringBuffer = new StringBuffer();
+        for (int i = 0; i < vidList.size(); i++) {
+            String vid = vidList.get(i);
+            stringBuffer.append("'").append(vid).append("'");
+            if (vidList.size() > 1 && (i + 1) != vidList.size()) {
+                stringBuffer.append(",");
+            }
+        }
+        return stringBuffer.toString();
     }
 }

@@ -6,6 +6,8 @@ import com.example.nebula.constant.AttributeEnum;
 import com.example.nebula.constant.ConditionEnum;
 import com.example.nebula.constant.EdgeDirectionEnum;
 import com.example.nebula.dto.graph.*;
+import com.github.pagehelper.Page;
+import com.github.pagehelper.PageInfo;
 import com.google.common.base.Joiner;
 import lombok.extern.slf4j.Slf4j;
 
@@ -88,9 +90,8 @@ public class NebulaUtil {
      **/
     public static String createTagEdge(GraphCreateTagEdge graphCreateTagEdge) {
         StringBuffer stringBuffer = new StringBuffer();
-        java.util.List<PropertyBean> propertyList = graphCreateTagEdge.getPropertyList();
+        List<PropertyBean> propertyList = graphCreateTagEdge.getPropertyList();
         if (CollectionUtil.isNotEmpty(propertyList)) {
-            //stringBuffer.append("(");
             for (int i = 0; i < propertyList.size(); i++) {
 
                 PropertyBean propertyBean = propertyList.get(i);
@@ -100,7 +101,6 @@ public class NebulaUtil {
                     stringBuffer.append(",");
                 }
             }
-            //stringBuffer.append(")");
         }
         String bufferString = stringBuffer.toString();
         log.info("stringBuffer :{}", bufferString);
@@ -117,12 +117,26 @@ public class NebulaUtil {
      * @Param [graphCreateVertex]
      **/
     public static String createPoint(GraphCreateVertex graphCreateVertex) {
-        java.util.List<Object> tagValueList = graphCreateVertex.getTagValueList();
+        List<Object> tagValueList = graphCreateVertex.getTagValueList();
         StringBuffer stringBuffer = getStringBuffer(tagValueList);
         String bufferString = stringBuffer.toString();
         log.info("stringBuffer :{}", bufferString);
+
+        StringBuffer stringBufferTagList = new StringBuffer();
+        List<String> tagList = graphCreateVertex.getTagList();
+        if (CollectionUtil.isNotEmpty(tagList)) {
+
+            for (int i = 0; i < tagList.size(); i++) {
+                String tagPropertyName = tagList.get(i);
+                stringBufferTagList.append(" `" + tagPropertyName + "` ");
+                if (tagList.size() > 1 && (i + 1) != tagList.size()) {
+                    stringBufferTagList.append(",");
+                }
+            }
+        }
+
         String createPoint = String.format("USE `%s`;INSERT VERTEX IF NOT EXISTS `%s`(%s) VALUES '%s': (" + bufferString + ");"
-            , graphCreateVertex.getSpace(), graphCreateVertex.getTagName(), Joiner.on(",").join(graphCreateVertex.getTagList()),
+            , graphCreateVertex.getSpace(), graphCreateVertex.getTagName(), stringBufferTagList.toString(),
             graphCreateVertex.getPointKey());
         log.info("创建vertex-gql语句:{}", createPoint);
         return createPoint;
@@ -244,6 +258,18 @@ public class NebulaUtil {
 
     /**
      * @return java.lang.String
+     * @Description vertex点删除后删除出入边
+     * @Param [graphDeleteVertex]
+     **/
+    public static String deleteVertexEdge(GraphDeleteVertex graphDeleteVertex) {
+        String deleteVertexEdge = String.format("USE `%s`; DELETE VERTEX '%s' WITH EDGE;", graphDeleteVertex.getSpace(), graphDeleteVertex.getVid());
+        log.info("vertex点删除后删除出入边 -gql语句:{}", deleteVertexEdge);
+        return deleteVertexEdge;
+    }
+
+
+    /**
+     * @return java.lang.String
      * @Description 插入边(绑两点之的关系)
      * @Param [graphInsertEdge]
      **/
@@ -329,8 +355,8 @@ public class NebulaUtil {
 
         List<String> leftAndRight = EdgeDirectionEnum.getLeftAndRight(graphExpand.getDirection());
 
-        String expandQuery = String.format("USE `%s`;MATCH p=(v) %s- [e " + bufferString + " * %s %s]-%s (v2) WHERE id(v) IN ['%s'] RETURN p LIMIT " + graphExpand.getResultSize() + ";",
-            graphExpand.getSpace(), leftAndRight.get(0), graphExpand.getStepStart(), graphExpand.getStepEndResult(), leftAndRight.get(1), graphExpand.getVid());
+        String expandQuery = String.format("USE `%s`;MATCH p=(v) %s- [e " + bufferString + " * %s %s]-%s (v2) WHERE id(v) IN [%s] RETURN p LIMIT " + graphExpand.getResultSize() + ";",
+            graphExpand.getSpace(), leftAndRight.get(0), graphExpand.getStepStart(), graphExpand.getStepEndResult(), leftAndRight.get(1), graphExpand.getVidList());
         log.info("扩展查询 -gql语句:{}", expandQuery);
         return expandQuery;
     }
@@ -349,18 +375,23 @@ public class NebulaUtil {
 
     /**
      * @return java.lang.String
-     * @Description 根据tag标签查询点
+     * @Description 根据tag标签属性查询点
      * @Param [graphVertexTatAttributeQuery]
      **/
     public static String vertexTagAttributeQuery(GraphVertexTatAttributeQuery graphVertexTatAttributeQuery) {
         String vertexTagsQuery = String.format("USE `%s`;match p=(v:`%s`) where v.`%s`.`%s` %s '%s' return v limit " + graphVertexTatAttributeQuery.getResultSize() + ";"
             , graphVertexTatAttributeQuery.getSpace(), graphVertexTatAttributeQuery.getTag(), graphVertexTatAttributeQuery.getTag()
             , graphVertexTatAttributeQuery.getTagName(), ConditionEnum.getCode(graphVertexTatAttributeQuery.getCondition()), graphVertexTatAttributeQuery.getTagValue());
-        log.info("根据tag标签查询点 -gql语句:{}", vertexTagsQuery);
+        log.info("根据tag标签属性查询点 -gql语句:{}", vertexTagsQuery);
         return vertexTagsQuery;
     }
 
 
+    /**
+     * @return java.lang.String
+     * @Description 创建索引
+     * @Param [graphCreateIndex]
+     **/
     public static String createIndex(GraphCreateIndex graphCreateIndex) {
         List<String> propertyList = CollectionUtil.newArrayList();
         for (AttributeBean attributeBean : graphCreateIndex.getAttributeBeanList()) {
@@ -369,7 +400,7 @@ public class NebulaUtil {
         String vertexTagsQuery = String.format("USE `%s`;CREATE %s INDEX `%s` on `%s`(%s) COMMENT '%s';"
             , graphCreateIndex.getSpace(), graphCreateIndex.getType(), graphCreateIndex.getIndexName(), graphCreateIndex.getTagEdgeName(),
             Joiner.on(",").join(propertyList), graphCreateIndex.getComment());
-        log.info("根据tag标签查询点 -gql语句:{}", vertexTagsQuery);
+        log.info("创建索引 -gql语句:{}", vertexTagsQuery);
         return vertexTagsQuery;
     }
 
@@ -402,5 +433,110 @@ public class NebulaUtil {
             return showAttributePage;
         }
         return "";
+    }
+
+    public static <T> PageInfo<T> startPage(List<T> list, Integer pageNum, Integer pageSize) {
+        //创建Page类
+        Page page = new Page(pageNum, pageSize);
+        //为Page类中的total属性赋值
+        page.setTotal(list.size());
+        //计算当前需要显示的数据下标起始值
+        int startIndex = (pageNum - 1) * pageSize;
+        int endIndex = Math.min(startIndex + pageSize, list.size());
+        //从链表中截取需要显示的子链表，并加入到Page
+        page.addAll(list.subList(startIndex, endIndex));
+        //以Page创建PageInfo
+        PageInfo pageInfo = new PageInfo<>(page);
+        return pageInfo;
+    }
+
+    /**
+     * @return java.lang.String
+     * @Description 修改点tag标签属性的值
+     * @Param [graphUpdateVertex]
+     **/
+    public static String updateVertex(GraphUpdateVertex graphUpdateVertex) {
+
+        List<String> tagList = graphUpdateVertex.getTagList();
+        List<Object> tagValueList = graphUpdateVertex.getTagValueList();
+        if (tagList.size() != tagValueList.size()) {
+            return "";
+        }
+        StringBuffer stringBuffer = new StringBuffer();
+        for (int i = 0; i < tagList.size(); i++) {
+            String tag = tagList.get(i);
+            Object tagValue = tagValueList.get(i);
+            stringBuffer.append("`").append(tag).append("`").append(" = ");
+            if (tagValue instanceof String) {
+                stringBuffer.append("'").append(tagValue).append("'");
+            } else {
+                stringBuffer.append(tagValue);
+            }
+            if (tagList.size() > 1 && (i + 1) != tagList.size()) {
+                stringBuffer.append(",");
+            }
+        }
+
+        String updateVertex = String.format("USE `%s`; UPDATE VERTEX ON `%s` '%s'  SET %s;"
+            , graphUpdateVertex.getSpace(), graphUpdateVertex.getTagName(), graphUpdateVertex.getPointKey(), stringBuffer.toString());
+        log.info("修改点 -gql语句:{}", updateVertex);
+        return updateVertex;
+    }
+
+    /**
+     * @return java.lang.String
+     * @Description 分页查询创建的边
+     * @Param [graphSpace]
+     **/
+    public static String edgePage(GraphSpace graphSpace) {
+        String edgePage = String.format("USE `%s`;MATCH ()<-[e]-()RETURN e SKIP " + (graphSpace.getPageNum() - 1) +
+            " LIMIT " + graphSpace.getPageSize() + " ;", graphSpace.getSpace());
+        log.info("分页查询创建的边 -gql语句:{}", edgePage);
+        return edgePage;
+    }
+
+
+    /**
+     * @return java.lang.String
+     * @Description 点的分页查询
+     * @Param [graphSpace]
+     **/
+    public static String vertexPage(GraphSpace graphSpace) {
+        String queryMatch = String.format("USE `%s`; match (v) return v skip " + (graphSpace.getPageNum() - 1) + " limit " + graphSpace.getPageSize() + ";", graphSpace.getSpace());
+        log.info("点的分页查询 -gql语句:{}", queryMatch);
+        return queryMatch;
+    }
+
+    /**
+     * @Description 关系编辑
+     * @Param [graphUpdateEdge]
+     * @return java.lang.String
+     **/
+    public static String updateEdge(GraphUpdateEdge graphUpdateEdge) {
+        List<String> edgeList = graphUpdateEdge.getEdgeList();
+        List<Object> edgeValueList = graphUpdateEdge.getEdgeValueList();
+        if (edgeList.size() != edgeValueList.size()) {
+            return "";
+        }
+        StringBuffer stringBuffer = new StringBuffer();
+        for (int i = 0; i < edgeList.size(); i++) {
+            String tag = edgeList.get(i);
+            Object tagValue = edgeValueList.get(i);
+            stringBuffer.append("`").append(tag).append("`").append(" = ");
+            if (tagValue instanceof String) {
+                stringBuffer.append("'").append(tagValue).append("'");
+            } else {
+                stringBuffer.append(tagValue);
+            }
+            if (edgeList.size() > 1 && (i + 1) != edgeList.size()) {
+                stringBuffer.append(",");
+            }
+        }
+
+        String updateVertex = String.format("USE `%s`; UPDATE EDGE ON `%s` '%s' -> '%s'@0 SET %s;"
+            , graphUpdateEdge.getSpace(), graphUpdateEdge.getEdgeName(), graphUpdateEdge.getSrcVid(), graphUpdateEdge.getDstVid()
+            , stringBuffer.toString());
+        log.info("关系编辑 -gql语句:{}", updateVertex);
+        return updateVertex;
     }
 }
