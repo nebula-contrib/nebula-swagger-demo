@@ -1,5 +1,6 @@
 package com.example.nebula.dto.graph;
 
+import com.hoteamsoft.common.dto.PageBeanDto;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
@@ -12,7 +13,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 @ApiModel("查询索引入参")
-public class GraphShowIndex {
+public class GraphShowIndex extends PageBeanDto {
 
     /**
      * 空间名称
@@ -22,7 +23,7 @@ public class GraphShowIndex {
     /**
      * attribute:  tag/edge
      **/
-    @ApiModelProperty(value = "属性可选: tag/edge",example = "tag",required = true)
+    @ApiModelProperty(value = "属性可选: tag/edge/fulltext",example = "tag",required = true)
     private String attribute;
 
 }

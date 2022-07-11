@@ -7,20 +7,18 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@ApiModel("删除点入参")
-public class GraphDeleteVertex {
+@ApiModel("归因分析查询入参")
+public class GraphVertexAnalysisResult {
 
-    /**
-     * 空间名称
-     **/
     @ApiModelProperty(value = "空间名称", example = "flceshi", required = true)
     private String space;
 
-    @ApiModelProperty(value = "vertex 点id", required = true)
-    private Object vid;
-
+    @ApiModelProperty(value = "查询关键字集合",required = true)
+    private List<String> wordList;
 }

@@ -40,7 +40,7 @@ public class GraphExpand {
     private Integer resultSize = Integer.MAX_VALUE;
 
     @ApiModelProperty(value = "扩展点id集合", required = true)
-    private List<String> vidList;
+    private List<Object> vidList;
 
 
     public String getStepEndResult() {
@@ -50,11 +50,16 @@ public class GraphExpand {
         return "";
     }
 
-    public String getVidList() {
+    public String getVidList(String vidType) {
         StringBuffer stringBuffer = new StringBuffer();
         for (int i = 0; i < vidList.size(); i++) {
-            String vid = vidList.get(i);
-            stringBuffer.append("'").append(vid).append("'");
+            Object vid = vidList.get(i);
+
+            if (vidType.contains("STRING")) {
+                stringBuffer.append("\"").append(vid).append("\"");
+            }else {
+                stringBuffer.append(vid);
+            }
             if (vidList.size() > 1 && (i + 1) != vidList.size()) {
                 stringBuffer.append(",");
             }

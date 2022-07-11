@@ -31,7 +31,7 @@ public class GraphUpdateVertex {
      * point的key
      **/
     @ApiModelProperty(value = "点的VID", example = "11", required = true)
-    private String pointKey;
+    private Object pointKey;
 
     @ApiModelProperty(value = "标签tag的属性值集合", required = true)
     private List<Object> tagValueList;

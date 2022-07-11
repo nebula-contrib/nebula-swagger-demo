@@ -1,6 +1,5 @@
 package com.example.nebula.dto.graph;
 
-
 import com.example.nebula.dto.PageBeanDto;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -13,17 +12,24 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@ApiModel("根据tag标签查询点入参实体")
-public class GraphVertexTatsQuery extends PageBeanDto {
+@ApiModel("查询边分页入参")
+public class GraphPageEdge extends PageBeanDto {
 
+    /**
+     * 空间名称
+     **/
     @ApiModelProperty(value = "空间名称", example = "flceshi", required = true)
     private String space;
 
-    //@ApiModelProperty(value = "标签集合", required = false)
-    //private List<String> tagList;
-    @ApiModelProperty(value = "标签", required = false)
-    private String tag;
-
-    @ApiModelProperty(value = "点id", required = false)
-    private Object pointKey;
+    @ApiModelProperty(value = "边类型edge", required = false)
+    private String edge;
 }
+
+
+
+
+
+
+
+
+

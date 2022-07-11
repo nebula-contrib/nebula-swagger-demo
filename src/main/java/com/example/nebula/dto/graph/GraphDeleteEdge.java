@@ -24,9 +24,9 @@ public class GraphDeleteEdge {
     private String edgeName;
 
     @ApiModelProperty(value = "点的起始VID", example = "11", required = true)
-    private String srcVid;
+    private Object srcVid;
 
     @ApiModelProperty(value = "点的目的VID", example = "12", required = true)
-    private String dstVid;
+    private Object dstVid;
 
 }

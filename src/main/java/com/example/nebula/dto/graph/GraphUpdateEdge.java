@@ -28,11 +28,11 @@ public class GraphUpdateEdge {
     @ApiModelProperty(value = "边类型edge属性集合", required = false)
     private List<String> edgeList;
 
-    @ApiModelProperty(value = "点的起始VID", example = "11", required = true)
-    private String srcVid;
+    @ApiModelProperty(value = "点的起始VID", required = true)
+    private Object srcVid;
 
-    @ApiModelProperty(value = "点的目的VID", example = "12", required = true)
-    private String dstVid;
+    @ApiModelProperty(value = "点的目的VID", required = true)
+    private Object dstVid;
 
     @ApiModelProperty(value = "边edge的属性值集合", required = false)
     private List<Object> edgeValueList;

@@ -30,8 +30,8 @@ public class GraphCreateVertex {
     /**
      * point的key
      **/
-    @ApiModelProperty(value = "点的VID", example = "11", required = true)
-    private String pointKey;
+    @ApiModelProperty(value = "点的VID", required = true)
+    private Object pointKey;
 
     @ApiModelProperty(value = "标签tag的属性值集合", required = false)
     private List<Object> tagValueList;

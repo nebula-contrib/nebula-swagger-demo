@@ -18,13 +18,25 @@ public class GraphCreateSpace {
     /**
      * 空间名称
      **/
-    @ApiModelProperty(value = "空间名称", example = "flceshi")
+    @ApiModelProperty(value = "空间名称", example = "flceshi",required = true)
     private String space;
+
+    /**
+     * 空间中文名称
+     **/
+    @ApiModelProperty(value = "空间中文名称", example = "付琳测试",required = true)
+    private String spaceChineseName;
     /**
      * 分片数量
      **/
     @ApiModelProperty(value = "分片数量", example = "1")
     private Integer partitionNum;
+
+    /**
+     * 分片数量
+     **/
+    @ApiModelProperty(value = "副本数量", example = "1")
+    private Integer replicaFactor;
     /**
      * 类型
      **/

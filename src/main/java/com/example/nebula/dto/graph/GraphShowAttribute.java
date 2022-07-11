@@ -17,7 +17,7 @@ public class GraphShowAttribute {
     /**
      * 空间名称
      **/
-    @ApiModelProperty(value = "空间名称",example = "flceshi",required = true)
+    @ApiModelProperty(value = "空间名称",example = "flceshi",required = false)
     private String space;
     /**
      * attributes:  spaces/tags/edges

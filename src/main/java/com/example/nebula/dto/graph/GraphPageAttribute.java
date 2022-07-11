@@ -1,6 +1,5 @@
 package com.example.nebula.dto.graph;
 
-
 import com.example.nebula.dto.PageBeanDto;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;

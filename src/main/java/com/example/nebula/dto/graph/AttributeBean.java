@@ -34,4 +34,11 @@ public class AttributeBean {
         }
         return "";
     }
+
+    private String getIndexFull() {
+        if (StrUtil.isNotBlank(indexLength)) {
+            return "(" + indexLength + ")";
+        }
+        return "";
+    }
 }

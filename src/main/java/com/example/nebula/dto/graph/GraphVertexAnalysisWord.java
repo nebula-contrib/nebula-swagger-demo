@@ -11,16 +11,12 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@ApiModel("删除点入参")
-public class GraphDeleteVertex {
+@ApiModel("解析文字入参")
+public class GraphVertexAnalysisWord {
 
-    /**
-     * 空间名称
-     **/
     @ApiModelProperty(value = "空间名称", example = "flceshi", required = true)
     private String space;
 
-    @ApiModelProperty(value = "vertex 点id", required = true)
-    private Object vid;
-
+    @ApiModelProperty(value = "查询关键字",required = true)
+    private String word;
 }
