@@ -48,11 +48,13 @@ public class VertexService {
     }
 
     public List<NebulaVertexJsonResult> vertexExpandQuery(GraphExpand graphExpand) {
-        return graphCommonService.executeJson(NebulaUtil.expandQuery(graphExpand), NebulaVertexJsonResult.class);
+        String vidType = graphCommonService.getVidType(graphExpand.getSpace());
+        return graphCommonService.executeJson(NebulaUtil.expandQuery(graphExpand,vidType), NebulaVertexJsonResult.class);
     }
 
     public List<NebulaVertexJsonResult> vertexTagsQuery(GraphVertexTatsQuery graphVertexTatsQuery) {
-        return graphCommonService.executeJson(NebulaUtil.vertexTagsQuery(graphVertexTatsQuery), NebulaVertexJsonResult.class);
+        String vidType = graphCommonService.getVidType(graphVertexTatsQuery.getSpace());
+        return graphCommonService.executeJson(NebulaUtil.vertexTagsQuery(graphVertexTatsQuery,vidType), NebulaVertexJsonResult.class);
     }
 
     public List<NebulaVertexJsonResult> vertexTagAttributeQuery(GraphVertexTatAttributeQuery graphVertexTatAttributeQuery) {

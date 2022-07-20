@@ -32,12 +32,14 @@ public class VertexManageController {
     @PostMapping("/createVertex")
     @ApiOperation("创建点(需要附加标签tag信息)")
     public R<List<CommonVo>> createVertex(@RequestBody GraphCreateVertex graphCreateVertex) {
-        return R.data(graphCommonService.executeJson(NebulaUtil.createPoint(graphCreateVertex), CommonVo.class));
+        String vidType = graphCommonService.getVidType(graphCreateVertex.getSpace());
+        return R.data(graphCommonService.executeJson(NebulaUtil.createPoint(graphCreateVertex,vidType), CommonVo.class));
     }
 
     @PostMapping("/deleteVertex")
     @ApiOperation("删除点(根据点id删除)")
     public R<List<CommonVo>> deleteVertex(@RequestBody GraphDeleteVertex graphDeleteVertex) {
-        return R.data(graphCommonService.executeJson(NebulaUtil.deleteVertex(graphDeleteVertex), CommonVo.class));
+        String vidType = graphCommonService.getVidType(graphDeleteVertex.getSpace());
+        return R.data(graphCommonService.executeJson(NebulaUtil.deleteVertex(graphDeleteVertex,vidType), CommonVo.class));
     }
 }

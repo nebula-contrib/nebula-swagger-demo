@@ -4,7 +4,10 @@ import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.example.nebula.dto.graph.GraphShowInfo;
 import com.example.nebula.exception.GraphExecuteException;
+import com.example.nebula.util.NebulaUtil;
+import com.example.nebula.vo.AttributeVo;
 import com.vesoft.nebula.client.graph.exception.IOErrorException;
 import com.vesoft.nebula.client.graph.net.Session;
 import lombok.extern.slf4j.Slf4j;
@@ -46,6 +49,15 @@ public class GraphCommonService {
             log.error("executeJson ql[{}] error, msg [{}]", gql, e.getMessage());
             throw new GraphExecuteException("execute gql error, gql: " + gql, e);
         }
+    }
+
+    public String getVidType(String space) {
+        List<AttributeVo> spaceList = executeJson(NebulaUtil.showAttributeInfo(GraphShowInfo.builder()
+                        .attribute("space").attributeName(space).space(space).build())
+                , AttributeVo.class);
+        AttributeVo attributeVo = spaceList.get(0);
+        AttributeVo.DataBean dataBean = attributeVo.getData().get(0);
+        return dataBean.getRow().get(6);
     }
 
 }

@@ -32,13 +32,15 @@ public class EdgeManageController {
     @PostMapping("/insertEdge")
     @ApiOperation("插入边edge(关系编辑-绑定两个点的关系)")
     public R<List<CommonVo>> insertEdge(@RequestBody GraphInsertEdge graphInsertEdge) {
-        return R.data(graphCommonService.executeJson(NebulaUtil.insertEdge(graphInsertEdge), CommonVo.class));
+        String vidType = graphCommonService.getVidType(graphInsertEdge.getSpace());
+        return R.data(graphCommonService.executeJson(NebulaUtil.insertEdge(graphInsertEdge,vidType), CommonVo.class));
     }
 
     @PostMapping("/deleteEdge")
     @ApiOperation("删除边edge(解除关系编辑-解除两个点的关系)")
     public R<List<CommonVo>> deleteEdge(@RequestBody GraphDeleteEdge graphDeleteEdge) {
-        return R.data(graphCommonService.executeJson(NebulaUtil.deleteEdge(graphDeleteEdge), CommonVo.class));
+        String vidType = graphCommonService.getVidType(graphDeleteEdge.getSpace());
+        return R.data(graphCommonService.executeJson(NebulaUtil.deleteEdge(graphDeleteEdge,vidType), CommonVo.class));
     }
 
 
