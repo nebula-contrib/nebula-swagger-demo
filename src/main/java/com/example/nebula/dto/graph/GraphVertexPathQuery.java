@@ -27,15 +27,15 @@ public class GraphVertexPathQuery {
     private List<String> edgeList;
 
     @ApiModelProperty(value = "点的起始VID", required = true)
-    private Object srcVid;
+    private List<Object> srcVid;
 
     @ApiModelProperty(value = "点的目的VID", required = true)
-    private Object dstVid;
+    private List<Object> dstVid;
 
-    @ApiModelProperty(value = "查询方向: REVERSELY反向 | BIDIRECT双向 | 空 正向", example = "", required = true)
+    @ApiModelProperty(value = "查询方向: REVERSELY反向 | BIDIRECT双向 | 空 正向", example = "BIDIRECT", required = true)
     private String direct;
 
-    @ApiModelProperty(value = "最大条数", example = "3", required = true)
+    @ApiModelProperty(value = "最大步数", example = "3", required = true)
     private Integer step;
 
     @ApiModelProperty(value = "查询最大条数", required = true)

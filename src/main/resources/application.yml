@@ -1,7 +1,14 @@
-
-
 nebula:
   userName: root
   password: nebula
-  # 我本地配置的host映射  test.ht.cdh.worker4 10.0.59.64
-  hostAddresses[0]: test.ht.cdh.worker4:9669
+  hostAddresses[0]: ip:9669
+  minConnsSize: 5
+  maxConnSize: 10
+  timeout: 300000
+  idleTime: 180000
+
+path:
+  uploadFilePath: /opt/project/java/graphFile
+  #  uploadFilePath: D:/data/graphFile
+  importerPath: /data1/opt
+#  importerPath: D:/data

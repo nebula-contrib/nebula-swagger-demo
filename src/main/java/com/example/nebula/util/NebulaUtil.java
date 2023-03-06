@@ -13,6 +13,7 @@ import com.github.pagehelper.Page;
 import com.github.pagehelper.PageInfo;
 import com.google.common.base.Joiner;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang.StringEscapeUtils;
 
 import java.util.List;
 
@@ -57,8 +58,8 @@ public class NebulaUtil {
      **/
     public static String createSpace(GraphCreateSpace graphCreateSpace) {
         String createSpace = String.format("CREATE SPACE `%s` (partition_num = %s, replica_factor = %s,vid_type = %s %s) COMMENT = '%s'",
-            graphCreateSpace.getSpace(), graphCreateSpace.getPartitionNum(), graphCreateSpace.getReplicaFactor(), graphCreateSpace.getFixedType(),
-            graphCreateSpace.getSize(), graphCreateSpace.getComment());
+                graphCreateSpace.getSpace(), graphCreateSpace.getPartitionNum(), graphCreateSpace.getReplicaFactor(), graphCreateSpace.getFixedType(),
+                graphCreateSpace.getSize(), graphCreateSpace.getComment());
         log.info("创建空间-gql语句:{}", createSpace);
         return createSpace;
     }
@@ -99,7 +100,7 @@ public class NebulaUtil {
 
                 PropertyBean propertyBean = propertyList.get(i);
                 stringBuffer.append(" `" + propertyBean.getPropertyName() + "` " + propertyBean.getPropertyType() + " " +
-                    "" + propertyBean.getIsNull() + " " + propertyBean.getDefaultValue() + " COMMENT '" + propertyBean.getPropertyComment() + "' ");
+                        "" + propertyBean.getIsNull() + " " + propertyBean.getDefaultValue() + " COMMENT '" + propertyBean.getPropertyComment() + "' ");
                 if (propertyList.size() > 1 && (i + 1) != propertyList.size()) {
                     stringBuffer.append(",");
                 }
@@ -108,8 +109,8 @@ public class NebulaUtil {
         String bufferString = stringBuffer.toString();
         log.info("stringBuffer :{}", bufferString);
 
-        String createTag = String.format("USE `%s`;CREATE %s `%s` ( " + bufferString + " )  COMMENT = '%s' ",
-            graphCreateTagEdge.getSpace(), graphCreateTagEdge.getType(), graphCreateTagEdge.getTagEdgeName(), graphCreateTagEdge.getTagEdgeComment());
+        String createTag = "USE `" + graphCreateTagEdge.getSpace() + "`;CREATE " + graphCreateTagEdge.getType() + " `" + graphCreateTagEdge.getTagEdgeName() + "` " +
+                "( " + bufferString + " )  COMMENT = '" + graphCreateTagEdge.getTagEdgeComment() + "' ";
         log.info("创建Tag-gql语句:{}", createTag);
         return createTag;
     }
@@ -138,12 +139,12 @@ public class NebulaUtil {
         }
         Object pointKey = graphCreateVertex.getPointKey();
         if (vidType.contains("STRING")) {
-            pointKey = "'" + pointKey.toString() + "'";
+            pointKey = "'" + StringEscapeUtils.unescapeHtml(pointKey.toString()) + "'";
         }
 
         String createPoint = String.format("USE `%s`;INSERT VERTEX IF NOT EXISTS `%s`(%s) VALUES %s: (" + bufferString + ");"
-            , graphCreateVertex.getSpace(), graphCreateVertex.getTagName(), stringBufferTagList.toString(),
-            pointKey);
+                , graphCreateVertex.getSpace(), graphCreateVertex.getTagName(), stringBufferTagList.toString(),
+                pointKey);
         log.info("创建vertex-gql语句:{}", createPoint);
         return createPoint;
     }
@@ -177,9 +178,9 @@ public class NebulaUtil {
      **/
     public static String addAttributeProperty(GraphAddAttribute graphAddAttribute) {
         String addAttributeProperty = String.format("USE `%s`;ALTER %s `%s` ADD (`%s` %s %s %s %s);"
-            , graphAddAttribute.getSpace(), graphAddAttribute.getAttribute(), graphAddAttribute.getAttributeName(),
-            graphAddAttribute.getPropertyName(), graphAddAttribute.getPropertyType(),
-            graphAddAttribute.getIsNull(), graphAddAttribute.getDefaultValue(), graphAddAttribute.getCommon());
+                , graphAddAttribute.getSpace(), graphAddAttribute.getAttribute(), graphAddAttribute.getAttributeName(),
+                graphAddAttribute.getPropertyName(), graphAddAttribute.getPropertyType(),
+                graphAddAttribute.getIsNull(), graphAddAttribute.getDefaultValue(), graphAddAttribute.getCommon());
         log.info("增加某个属性的 子属性 -gql语句:{}", addAttributeProperty);
         return addAttributeProperty;
     }
@@ -203,8 +204,8 @@ public class NebulaUtil {
         }
 
         String delAttributeProperty = String.format("USE `%s`; ALTER %s `%s` DROP (%s);"
-            , graphDelAttribute.getSpace(), graphDelAttribute.getAttribute(),
-            graphDelAttribute.getAttributeName(), stringBuffer.toString());
+                , graphDelAttribute.getSpace(), graphDelAttribute.getAttribute(),
+                graphDelAttribute.getAttributeName(), stringBuffer.toString());
         log.info("删除某个属性的 子属性 -gql语句:{}", delAttributeProperty);
         return delAttributeProperty;
     }
@@ -216,8 +217,8 @@ public class NebulaUtil {
      **/
     public static String showAttributeInfo(GraphShowInfo graphShowInfo) {
         String delAttributeProperty = String.format("USE `%s`; DESCRIBE %s `%s`;"
-            //String delAttributeProperty = String.format("USE `%s`; SHOW CREATE %s `%s`;"
-            , graphShowInfo.getSpace(), graphShowInfo.getAttribute(), graphShowInfo.getAttributeName());
+                //String delAttributeProperty = String.format("USE `%s`; SHOW CREATE %s `%s`;"
+                , graphShowInfo.getSpace(), graphShowInfo.getAttribute(), graphShowInfo.getAttributeName());
         log.info("查询属性的 子属性列表 -gql语句:{}", delAttributeProperty);
         return delAttributeProperty;
     }
@@ -308,9 +309,15 @@ public class NebulaUtil {
             dstVid = "'" + dstVid.toString() + "'";
         }
 
+        StringBuffer stringBufferEdge = new StringBuffer();
+        for (String edge : graphInsertEdge.getEdgeList()) {
+            stringBufferEdge.append("`").append(edge).append("`").append(",");
+        }
+        String str = stringBufferEdge.toString();
+
         String insertEdge = String.format("USE `%s`; INSERT EDGE IF NOT EXISTS `%s` (%s) VALUES %s->%s:( %s );"
-            , graphInsertEdge.getSpace(), graphInsertEdge.getEdgeName(), Joiner.on(",").join(graphInsertEdge.getEdgeList()),
-            srcVid, dstVid, bufferString);
+                , graphInsertEdge.getSpace(), graphInsertEdge.getEdgeName(), StrUtil.isNotBlank(str) ? str.substring(0, str.length() - 1) : "",
+                srcVid, dstVid, bufferString);
         log.info("插入边 -gql语句:{}", insertEdge);
         return insertEdge;
     }
@@ -327,7 +334,7 @@ public class NebulaUtil {
             for (int i = 0; i < edgeValueList.size(); i++) {
                 Object value = edgeValueList.get(i);
                 if (value instanceof String) {
-                    stringBuffer.append("'" + value + "'");
+                    stringBuffer.append("'" + StringEscapeUtils.unescapeHtml((String) value) + "'");
                 } else {
                     stringBuffer.append(value);
                 }
@@ -354,7 +361,7 @@ public class NebulaUtil {
             dstVid = "'" + dstVid.toString() + "'";
         }
         String deleteEdge = String.format("USE `%s`; DELETE EDGE `%s` %s -> %s @0;"
-            , graphDeleteEdge.getSpace(), graphDeleteEdge.getEdgeName(), srcVid, dstVid);
+                , graphDeleteEdge.getSpace(), graphDeleteEdge.getEdgeName(), srcVid, dstVid);
         log.info("删除边 -gql语句:{}", deleteEdge);
         return deleteEdge;
     }
@@ -391,8 +398,21 @@ public class NebulaUtil {
 
         List<String> leftAndRight = EdgeDirectionEnum.getLeftAndRight(graphExpand.getDirection());
 
-        String expandQuery = String.format("USE `%s`;MATCH p=(v) %s- [e " + bufferString + " * %s %s]-%s (v2) WHERE id(v) IN [%s] RETURN p LIMIT " + graphExpand.getResultSize() + ";",
-            graphExpand.getSpace(), leftAndRight.get(0), graphExpand.getStepStart(), graphExpand.getStepEndResult(), leftAndRight.get(1), graphExpand.getVidList(vidType));
+        String expandQuery = String.format("USE `%s`;MATCH p=(v) %s- [e " + bufferString + " * %s %s]-%s (v2) WHERE id(v) IN [%s]  %s RETURN p LIMIT " + graphExpand.getResultSize() + ";",
+                graphExpand.getSpace(), leftAndRight.get(0), graphExpand.getStepStart(), graphExpand.getStepEndResult(), leftAndRight.get(1), graphExpand.getVidList(vidType), StringEscapeUtils.unescapeHtml(graphExpand.getCondition()));
+        log.info("扩展查询 -gql语句:{}", expandQuery);
+        return expandQuery;
+    }
+
+    /**
+     * @return java.lang.String
+     * @Description 子图查询
+     * @Param [graphExpand]
+     **/
+    public static String subgraphQuery(GraphExpand graphExpand, String vidType) {
+        String direction = EdgeDirectionEnum.getDirection(graphExpand.getDirection());
+        String expandQuery = String.format("USE `%s`;GET SUBGRAPH %s STEPS FROM %s %s %s YIELD VERTICES AS `vertices_`, EDGES AS `edges_`;",
+                graphExpand.getSpace(), graphExpand.getStepStart(), graphExpand.getVidList(vidType), direction, Joiner.on(",").join(graphExpand.getEdgeList()));
         log.info("扩展查询 -gql语句:{}", expandQuery);
         return expandQuery;
     }
@@ -421,7 +441,7 @@ public class NebulaUtil {
         }
 
         String vertexTagsQuery = String.format("USE `%s`;MATCH p=(v %s) %s return v limit " + Integer.MAX_VALUE + ";",
-            graphVertexTatsQuery.getSpace(), tag, pointKey);
+                graphVertexTatsQuery.getSpace(), tag, pointKey);
         log.info("根据tag标签查询点 -gql语句:{}", vertexTagsQuery);
         return vertexTagsQuery;
     }
@@ -446,8 +466,8 @@ public class NebulaUtil {
         }
 
         String vertexTagsQuery = String.format("USE `%s`;MATCH p=(v %s) %s return v SKIP " + skip + " limit " + graphVertexTatsQuery.getPageSize() + ";",
-            graphVertexTatsQuery.getSpace(),//Joiner.on(":").join(graphVertexTatsQuery.getTagList()));
-            tag, pointKey);
+                graphVertexTatsQuery.getSpace(),//Joiner.on(":").join(graphVertexTatsQuery.getTagList()));
+                tag, pointKey);
         log.info("根据tag标签分页查询点 -gql语句:{}", vertexTagsQuery);
         return vertexTagsQuery;
     }
@@ -459,7 +479,7 @@ public class NebulaUtil {
      **/
     public static String vertexTagAttributeQuery(GraphVertexTatAttributeQuery graphVertexTatAttributeQuery) {
         String vertexTagsQuery = String.format("USE `%s`;match p=(v:`%s`) %s return v limit " + graphVertexTatAttributeQuery.getResultSize() + ";"
-            , graphVertexTatAttributeQuery.getSpace(), graphVertexTatAttributeQuery.getTag(), graphVertexTatAttributeQuery.getCondition());
+                , graphVertexTatAttributeQuery.getSpace(), graphVertexTatAttributeQuery.getTag(), graphVertexTatAttributeQuery.getCondition());
         log.info("根据tag标签属性查询点 -gql语句:{}", vertexTagsQuery);
         return vertexTagsQuery;
     }
@@ -476,8 +496,8 @@ public class NebulaUtil {
             propertyList.add(attributeBean.getPropertyName());
         }
         String vertexTagsQuery = String.format("USE `%s`;CREATE %s INDEX `%s` on `%s`(%s) COMMENT '%s';"
-            , graphCreateIndex.getSpace(), graphCreateIndex.getType(), graphCreateIndex.getIndexName(), graphCreateIndex.getTagEdgeName(),
-            Joiner.on(",").join(propertyList), graphCreateIndex.getComment());
+                , graphCreateIndex.getSpace(), graphCreateIndex.getType(), graphCreateIndex.getIndexName(), graphCreateIndex.getTagEdgeName(),
+                Joiner.on(",").join(propertyList), graphCreateIndex.getComment());
         log.info("创建索引 -gql语句:{}", vertexTagsQuery);
         return vertexTagsQuery;
     }
@@ -488,7 +508,7 @@ public class NebulaUtil {
             propertyList.add(attributeBean.getPropertyName());
         }
         String vertexTagsQuery = String.format("USE `%s`;CREATE FULLTEXT %s INDEX nebula_index_" + RandomUtil.randomNumbers(4) + " ON `%s`(name)"
-            , graphCreateIndex.getSpace(), graphCreateIndex.getType(), graphCreateIndex.getTagEdgeName());
+                , graphCreateIndex.getSpace(), graphCreateIndex.getType(), graphCreateIndex.getTagEdgeName());
         log.info("创建全文索引 -gql语句:{}", vertexTagsQuery);
         return vertexTagsQuery;
     }
@@ -500,7 +520,7 @@ public class NebulaUtil {
      **/
     public static String showCreateAttributeInfo(GraphShowInfo graphShowInfo) {
         String showCreateAttributeInfo = String.format("USE `%s`; SHOW CREATE %s `%s`;"
-            , graphShowInfo.getSpace(), graphShowInfo.getAttribute(), graphShowInfo.getAttributeName());
+                , graphShowInfo.getSpace(), graphShowInfo.getAttribute(), graphShowInfo.getAttributeName());
         log.info("查询属性的详细信息 -gql语句:{}", showCreateAttributeInfo);
         return showCreateAttributeInfo;
     }
@@ -510,14 +530,14 @@ public class NebulaUtil {
         int skip = (graphPageAttribute.getPageNum() - 1) * graphPageAttribute.getPageSize();
         if (AttributeEnum.TAGS.name().equalsIgnoreCase(graphPageAttribute.getAttribute())) {
             String showAttributePage = String.format("USE `%s`; MATCH (v) RETURN v SKIP %s LIMIT %s;"
-                , graphPageAttribute.getSpace(), skip, graphPageAttribute.getPageSize());
+                    , graphPageAttribute.getSpace(), skip, graphPageAttribute.getPageSize());
             log.info("查询tag分页 -gql语句:{}", showAttributePage);
             return showAttributePage;
         }
 
         if (AttributeEnum.EDGES.name().equalsIgnoreCase(graphPageAttribute.getAttribute())) {
             String showAttributePage = String.format("USE `%s`;MATCH ()-[e]->() RETURN e SKIP %s LIMIT %s;"
-                , graphPageAttribute.getSpace(), skip, graphPageAttribute.getPageSize());
+                    , graphPageAttribute.getSpace(), skip, graphPageAttribute.getPageSize());
             log.info("查询edge分页 -gql语句:{}", showAttributePage);
             return showAttributePage;
         }
@@ -573,7 +593,7 @@ public class NebulaUtil {
 
 
         String updateVertex = String.format("USE `%s`; UPDATE VERTEX ON `%s` %s  SET %s;"
-            , graphUpdateVertex.getSpace(), graphUpdateVertex.getTagName(), pointKey, stringBuffer.toString());
+                , graphUpdateVertex.getSpace(), graphUpdateVertex.getTagName(), pointKey, stringBuffer.toString());
         log.info("修改点 -gql语句:{}", updateVertex);
         return updateVertex;
     }
@@ -589,8 +609,15 @@ public class NebulaUtil {
             edge = ":`" + graphPageEdge.getEdge() + "`";
         }
         int skip = (graphPageEdge.getPageNum() - 1) * graphPageEdge.getPageSize();
-        String edgePage = String.format("USE `%s`;MATCH ()-[e %s]->()RETURN e SKIP " + skip +
-            " LIMIT " + graphPageEdge.getPageSize() + " ;", graphPageEdge.getSpace(), edge);
+        String edgePage;
+        if (StrUtil.isBlank(graphPageEdge.getVid())) {
+            edgePage = String.format("USE `%s`;MATCH ()-[e %s]->()RETURN e SKIP " + skip +
+                    " LIMIT " + graphPageEdge.getPageSize() + " ;", graphPageEdge.getSpace(), edge);
+        } else {
+            edgePage = String.format("USE `%s`;MATCH (m)-[e %s]->(n)  where id(m)=='%s' RETURN e " +
+                    "UNION MATCH (m)-[e %s]->(n)  where id(n)=='%s' RETURN e SKIP " + skip +
+                    " LIMIT " + graphPageEdge.getPageSize() + " ;", graphPageEdge.getSpace(), edge, graphPageEdge.getVid(), edge, graphPageEdge.getVid());
+        }
         log.info("分页查询创建的边 -gql语句:{}", edgePage);
         return edgePage;
     }
@@ -643,8 +670,8 @@ public class NebulaUtil {
         }
 
         String updateVertex = String.format("USE `%s`; UPDATE EDGE ON `%s` %s -> %s@0 SET %s;"
-            , graphUpdateEdge.getSpace(), graphUpdateEdge.getEdgeName(), srcVid, dstVid
-            , stringBuffer.toString());
+                , graphUpdateEdge.getSpace(), graphUpdateEdge.getEdgeName(), srcVid, dstVid
+                , stringBuffer.toString());
         log.info("关系编辑 -gql语句:{}", updateVertex);
         return updateVertex;
     }
@@ -656,15 +683,21 @@ public class NebulaUtil {
      * @Param [graphVertexTatAttributeQuery]
      **/
     public static String vertexAskQueryAnalysis(String tagName, String name) {
-        String vertexTagsQuery = String.format("match p=(v:`%s`)-[e]->(v2) where v.`%s`.`name` CONTAINS '%s' return nodes(p),relationships(p) "
-            , tagName, tagName, name);
+        String vertexTagsQuery = String.format("match p=(v:`%s`)-[e]-(v2) where v.`%s`.`name` CONTAINS '%s' return nodes(p),relationships(p) "
+                , tagName, tagName, name);
         log.info("根据tag标签属性查询点 -gql语句:{}", vertexTagsQuery);
         return vertexTagsQuery;
     }
+    //public static String vertexAskQueryAnalysis(String tagName, List<String> ids) {
+    //    String vertexTagsQuery = String.format("match p=(v:`%s`)-[e]-(v2) where id(v2) in %s return nodes(p),relationships(p)"
+    //        , tagName,JSONUtil.toJsonStr(ids),tagName,JSONUtil.toJsonStr(ids));
+    //    log.info("根据tag标签属性查询点 -gql语句:{}", vertexTagsQuery);
+    //    return vertexTagsQuery;
+    //}
 
     public static String vertexAskQuery(String tagName, String name) {
         String vertexTagsQuery = String.format("match p=(v:`%s`) where v.`%s`.`name` CONTAINS '%s' return nodes(p),relationships(p) "
-            , tagName, tagName, name);
+                , tagName, tagName, name);
         log.info("根据tag标签属性查询点 -gql语句:{}", vertexTagsQuery);
         return vertexTagsQuery;
     }
@@ -680,7 +713,15 @@ public class NebulaUtil {
         if (StrUtil.isNotBlank(graphPageEdge.getEdge())) {
             edge = ":`" + graphPageEdge.getEdge() + "`";
         }
-        String edgeCondition = String.format("USE `%s`;MATCH ()-[e %s]->() RETURN e limit " + Integer.MAX_VALUE + ";", graphPageEdge.getSpace(), edge);
+
+        String edgeCondition = "";
+        if (StrUtil.isBlank(graphPageEdge.getVid())) {
+            edgeCondition = String.format("USE `%s`;MATCH ()-[e %s]->() RETURN e limit " + Integer.MAX_VALUE + ";", graphPageEdge.getSpace(), edge);
+        } else {
+            edgeCondition = String.format("USE `%s`;MATCH (m)-[e %s]->(n)  where id(m)=='%s' RETURN e " +
+                    "UNION MATCH (m)-[e %s]->(n)  where id(n)=='%s' RETURN e LIMIT " +
+                    Integer.MAX_VALUE + ";", graphPageEdge.getSpace(), edge, graphPageEdge.getVid(), edge, graphPageEdge.getVid());
+        }
         log.info("根据条件查询边 -gql语句:{}", edgeCondition);
         return edgeCondition;
     }
@@ -693,7 +734,7 @@ public class NebulaUtil {
      **/
     public static String infoIndex(GraphShowInfo graphShowInfo) {
         String infoIndex = String.format("USE `%s`; DESCRIBE %s INDEX `%s`;", graphShowInfo.getSpace()
-            , graphShowInfo.getAttribute(), graphShowInfo.getAttributeName());
+                , graphShowInfo.getAttribute(), graphShowInfo.getAttributeName());
         log.info("查询索引的详细信息 -gql语句:{}", infoIndex);
         return infoIndex;
     }
@@ -717,7 +758,7 @@ public class NebulaUtil {
      **/
     public static String fullQuery(String tag, String word) {
         String fullQuery = String.format("LOOKUP ON `%s` WHERE WILDCARD(`%s`.name, \"*%s*\") YIELD id(vertex)"
-            , tag, tag, word);
+                , tag, tag, word);
         return fullQuery;
     }
 
@@ -729,7 +770,7 @@ public class NebulaUtil {
      **/
     public static String queryMatchVertex(String space, List<?> idList) {
         String queryMatch = String.format("USE `%s`; match (v)  WHERE id(v) IN %s RETURN v;"
-            , space, JSONUtil.toJsonStr(idList));
+                , space, JSONUtil.toJsonStr(idList));
         log.info("match查询 -gql语句:{}", queryMatch);
         return queryMatch;
     }
@@ -743,18 +784,24 @@ public class NebulaUtil {
      **/
     public static String findPath(GraphVertexPathQuery graphVertexPathQuery, String vidType) {
 
-        Object srcVid = graphVertexPathQuery.getSrcVid();
-        Object dstVid = graphVertexPathQuery.getDstVid();
-
+        List<Object> srcVidList = graphVertexPathQuery.getSrcVid();
+        List<Object> dstVidList = graphVertexPathQuery.getDstVid();
+        String srcVid = "";
+        String dstVid = "";
         if (vidType.contains("STRING")) {
-            srcVid = "'" + srcVid.toString() + "'";
-            dstVid = "'" + dstVid.toString() + "'";
+            for (Object id : srcVidList) {
+                srcVid += "\"" + id.toString() + "\"" + ",";
+            }
+            for (Object id : dstVidList) {
+                dstVid += "\"" + id.toString() + "\"" + ",";
+            }
         }
 
         String queryMatch = String.format("USE `%s`; FIND %s PATH WITH PROP FROM %s TO %s OVER %s %s %s UPTO %s STEPS YIELD path AS p | limit %s;"
-            , graphVertexPathQuery.getSpace(), graphVertexPathQuery.getPathType(), srcVid, dstVid
-            , graphVertexPathQuery.getEdgeList(), graphVertexPathQuery.getDirect(), graphVertexPathQuery.getCondition()
-            , graphVertexPathQuery.getStep(), graphVertexPathQuery.getResultSize());
+                , graphVertexPathQuery.getSpace(), graphVertexPathQuery.getPathType(), srcVid.substring(0, srcVid.length() - 1)
+                , dstVid.substring(0, dstVid.length() - 1)
+                , graphVertexPathQuery.getEdgeList(), graphVertexPathQuery.getDirect(), StringEscapeUtils.unescapeHtml(graphVertexPathQuery.getCondition())
+                , graphVertexPathQuery.getStep(), graphVertexPathQuery.getResultSize());
         log.info("match查询 -gql语句:{}", queryMatch);
         return queryMatch;
     }
@@ -767,7 +814,7 @@ public class NebulaUtil {
      **/
     public static String addListener(GraphCreateIndex graphCreateIndex, String listenerHost) {
         String addListener = String.format("USE `%s`; ADD LISTENER ELASTICSEARCH %s;"
-            , graphCreateIndex.getSpace(), listenerHost);
+                , graphCreateIndex.getSpace(), listenerHost);
         log.info("增加监听 -gql语句:{}", addListener);
         return addListener;
     }
@@ -796,12 +843,55 @@ public class NebulaUtil {
      * 删除全文索引
      *
      * @return java.lang.String
-     * @Param [graphDropAttribute,fullIndexName]
+     * @Param [graphDropAttribute, fullIndexName]
      **/
     public static String dropFullIndex(GraphDropAttribute graphDropAttribute, String fullIndexName) {
         String dropFullIndex = String.format("USE `%s`; DROP FULLTEXT INDEX %s;"
-            , graphDropAttribute.getSpace(), fullIndexName);
+                , graphDropAttribute.getSpace(), fullIndexName);
         log.info("删除全文索引 -gql语句:{}", dropFullIndex);
         return dropFullIndex;
+    }
+
+    /**
+     * 补充信息
+     *
+     * @return java.lang.String
+     * @Param [tag, ids]
+     **/
+    public static String vertexAskQueryByTag(String tag, List<String> ids) {
+        String vertexAskQueryByTag = String.format(" MATCH p=(v:`%s`)-[e]->(v2) WHERE id(v2) IN %s  RETURN nodes(p) LIMIT 1000"
+                , tag, JSONUtil.toJsonStr(ids));
+        log.info("补充信息 -gql语句:{}", vertexAskQueryByTag);
+        return vertexAskQueryByTag;
+    }
+
+    /**
+     * 共同邻居
+     *
+     * @return java.lang.String
+     * @Param [space, ids]
+     **/
+    public static String commonNeighbor(String space, List<Object> ids) {
+
+        StringBuffer stringBuffer = new StringBuffer();
+        for (int i = 0; i < ids.size(); i++) {
+            if (i + 1 < ids.size()) {
+                stringBuffer.append(" UNION GO FROM '" + ids.get(i) + "' OVER * REVERSELY YIELD src(edge) as id) INTERSECT(GO FROM '" + ids.get(i + 1) + "' OVER *  YIELD dst(edge) as id ");
+            }
+        }
+        log.info(stringBuffer.toString());
+        String commonNeighbor = String.format("USE `%s`; (GO FROM '%s' OVER *  YIELD dst(edge) as id  %s UNION GO FROM '%s' OVER * REVERSELY YIELD src(edge) as id)",
+                space, ids.get(0), stringBuffer.toString(), ids.get(ids.size() - 1));
+        log.info("共同邻居 -gql语句:{}", commonNeighbor);
+        return commonNeighbor;
+    }
+
+    public static String findPathList(String space, List<String> row, List<Object> ids, String vidType) {
+        String str = JSONUtil.toJsonStr(row);
+        String idsStr = JSONUtil.toJsonStr(ids);
+        String findPathList = String.format("USE `%s`; FIND ALL PATH WITH PROP FROM %s TO %s OVER * BIDIRECT UPTO 1 STEPS YIELD path as p | limit 1000;"
+                , space, str.substring(1, str.length() - 1), idsStr.substring(1, idsStr.length() - 1));
+        log.info("match查询 -gql语句:{}", findPathList);
+        return findPathList;
     }
 }

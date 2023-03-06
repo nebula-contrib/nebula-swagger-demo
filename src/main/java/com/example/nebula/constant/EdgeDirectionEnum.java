@@ -12,13 +12,14 @@ import java.util.List;
 public enum EdgeDirectionEnum {
 
 
-    流出("OUTFLOW", "", ">"),
-    流入("INFLOW", "<", ""),
-    双向("TWO-WAY", "", "");
+    流出("OUTFLOW", "", ">","OUT"),
+    流入("INFLOW", "<", "","IN"),
+    双向("TWO-WAY", "", "","BOTH");
 
     private String name;
     private String left;
     private String right;
+    private String direct;
 
 
     /**
@@ -40,4 +41,15 @@ public enum EdgeDirectionEnum {
         results.add("");
         return results;
     }
+
+    public static String getDirection(String name) {
+        EdgeDirectionEnum[] values = EdgeDirectionEnum.values();
+        for (EdgeDirectionEnum edgeDirectionEnum : values) {
+            if (name.equalsIgnoreCase(edgeDirectionEnum.getName())) {
+                return edgeDirectionEnum.getDirect();
+            }
+        }
+        return "BOTH";
+    }
+
 }
