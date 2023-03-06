@@ -1,5 +1,6 @@
 package com.example.nebula.dto.graph;
 
+import cn.hutool.core.util.StrUtil;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
@@ -24,7 +25,7 @@ public class GraphExpand {
     @ApiModelProperty(value = "边类型集合", required = true)
     private List<String> edgeList;
 
-    @ApiModelProperty(value = "方向: OUTFLOW(流出);INFLOW(流入);TWO-WAY(双向);", example = "TWO-WAY",required = true)
+    @ApiModelProperty(value = "方向: OUTFLOW(流出);INFLOW(流入);TWO-WAY(双向);", example = "TWO-WAY", required = true)
     private String direction;
 
     @ApiModelProperty(value = "步数开始(单步/范围的开始)", example = "1", required = true)
@@ -43,6 +44,9 @@ public class GraphExpand {
     private List<Object> vidList;
 
 
+    @ApiModelProperty(value = "条件(可为空)", example = " l.name CONTAINS '1' ",required = false)
+    private String condition;
+
     public String getStepEndResult() {
         if (stepEnd != null) {
             return ".." + stepEnd;
@@ -57,7 +61,7 @@ public class GraphExpand {
 
             if (vidType.contains("STRING")) {
                 stringBuffer.append("\"").append(vid).append("\"");
-            }else {
+            } else {
                 stringBuffer.append(vid);
             }
             if (vidList.size() > 1 && (i + 1) != vidList.size()) {
@@ -65,5 +69,13 @@ public class GraphExpand {
             }
         }
         return stringBuffer.toString();
+    }
+
+    //  l.degree CONTAINS 1 AND l.min_level == 2
+    public String getCondition() {
+        if (StrUtil.isNotBlank(condition)) {
+            return " AND ALL(l IN e WHERE " + condition + ")";
+        }
+        return "";
     }
 }

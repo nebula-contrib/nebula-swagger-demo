@@ -5,7 +5,7 @@ import lombok.*;
 /**
  * 图可视化-边
  *
- * @author Li.Wei by 2022/3/30
+ * @author fulin by 2022/3/30
  */
 @Data
 @Builder

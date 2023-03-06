@@ -23,6 +23,10 @@ public class GraphPageEdge extends PageBeanDto {
 
     @ApiModelProperty(value = "边类型edge", required = false)
     private String edge;
+
+
+    @ApiModelProperty(value = "起点或者终点ID", required = false)
+    private String vid;
 }
 
 

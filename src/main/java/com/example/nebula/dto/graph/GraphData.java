@@ -10,7 +10,7 @@ import java.util.Collection;
 /**
  * 图可视化展示数据结构
  *
- * @author Li.Wei by 2022/3/30
+ * @author fulin by 2022/3/30
  */
 @Data
 @Builder

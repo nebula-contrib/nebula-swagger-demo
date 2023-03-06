@@ -13,10 +13,7 @@ import com.github.pagehelper.PageInfo;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -31,24 +28,28 @@ public class AttributeController {
     @Autowired
     AttributeService attributeService;
 
-    @PostMapping("/showAttribute")
+    @PostMapping("/list")
     @ApiOperation("属性查询(spaces tags edges列表)")
-    public R<List<AttributeVo>> showAttribute(@RequestBody GraphShowAttribute graphShowAttribute) {
-        return R.data(graphCommonService.executeJson(NebulaUtil.showAttributes(graphShowAttribute), AttributeVo.class));
+    public R<List<AttributeVo>> showAttribute(@RequestBody GraphShowAttribute graphShowAttribute, @PathVariable String space) {
+        return R.data(attributeService.showAttribute(graphShowAttribute));
     }
 
 
-    @PostMapping("/pageListAttribute")
+    @PostMapping("/page")
     @ApiOperation("属性分页查询 tags edges 分页列表")
-    public R<PageInfo<AttributeVo.DataBean>> pageListAttribute(@RequestBody GraphPageAttribute graphPageAttribute) {
+    public R<PageInfo<AttributeVo.DataBean>> pageListAttribute(@RequestBody GraphPageAttribute graphPageAttribute, @PathVariable String space) {
         return R.data(attributeService.pageListAttribute(graphPageAttribute));
     }
 
-
-    @PostMapping("/showAttributeInfo")
+    @PostMapping("/listProperty")
     @ApiOperation("属性的子属性列表查询 tag edge 的属性列表查询")
-    public R<List<AttributeVo>> showAttributeInfo(@RequestBody GraphShowInfo graphShowInfo) {
+    public R<List<AttributeVo>> showAttributeInfo(@RequestBody GraphShowInfo graphShowInfo, @PathVariable String space) {
         return R.data(attributeService.showAttributeInfo(graphShowInfo));
     }
 
+    @PostMapping("/propertyInfo")
+    @ApiOperation("属性的详细信息")
+    public R<List<AttributeVo>> showCreateAttributeInfo(@RequestBody GraphShowInfo graphShowInfo, @PathVariable String space) {
+        return R.data(attributeService.showCreateAttributeInfo(graphShowInfo));
+    }
 }

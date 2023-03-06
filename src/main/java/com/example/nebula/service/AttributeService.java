@@ -1,9 +1,13 @@
 package com.example.nebula.service;
 
 
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.map.MapUtil;
 import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.StrUtil;
+import cn.hutool.json.JSONUtil;
+import com.example.nebula.constant.AttributeEnum;
 import com.example.nebula.dto.graph.*;
 import com.example.nebula.util.NebulaUtil;
 import com.example.nebula.vo.AttributeVo;
@@ -15,6 +19,9 @@ import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * @Descriptin: 属性操作
@@ -26,6 +33,55 @@ public class AttributeService {
 
     @Autowired
     GraphCommonService graphCommonService;
+
+
+    /**
+     * @return java.util.List<com.hoteamsoft.common.vo.AttributeVo>
+     * @Description 属性列表查询增加tag颜色, 增加tag子属性
+     * @Param [graphShowAttribute]
+     **/
+    public List<AttributeVo> showAttribute(GraphShowAttribute graphShowAttribute) {
+        List<AttributeVo> list = graphCommonService.executeJson(NebulaUtil.showAttributes(graphShowAttribute), AttributeVo.class);
+        if (CollUtil.isNotEmpty(list)) {
+            if (AttributeEnum.TAGS.name().equalsIgnoreCase(graphShowAttribute.getAttribute())) {
+                //List<GraphTag> graphTagList = graphTagService.queryBySpace(graphShowAttribute.getSpace());
+                //if (CollUtil.isNotEmpty(graphTagList)) {
+                //    Map<String, GraphTag> tagMap = graphTagList.stream().collect(Collectors.toMap(GraphTag::getTagName, Function.identity()));
+                list.forEach(attributeVo -> {
+                    attributeVo.getData().forEach(dataBean -> {
+                        String tag = dataBean.getRow().get(0);
+                        //GraphTag graphTag = tagMap.get(tag);
+                        //if (ObjectUtil.isNotNull(graphTag)) {
+                        //    dataBean.getRow().add(graphTag.getColor());
+                        //} else {
+                        //    dataBean.getRow().add("");
+                        //}
+                        GraphShowInfo graphShowInfo = GraphShowInfo.builder().space(graphShowAttribute.getSpace())
+                                .attribute("tag").attributeName(tag).build();
+                        List<AttributeVo> attributeVoList = graphCommonService.executeJson(NebulaUtil.showAttributeInfo(graphShowInfo), AttributeVo.class);
+                        AttributeVo attributeVoSon = attributeVoList.get(0);
+                        dataBean.getRow().add(JSONUtil.toJsonStr(attributeVoSon));
+                    });
+                    attributeVo.getColumns().add("sonTagAttributeVo");
+                });
+                //}
+            }
+            if (AttributeEnum.EDGES.name().equalsIgnoreCase(graphShowAttribute.getAttribute())) {
+                list.forEach(attributeVo -> {
+                    attributeVo.getData().forEach(dataBean -> {
+                        GraphShowInfo graphShowInfo = GraphShowInfo.builder().space(graphShowAttribute.getSpace())
+                                .attribute("edge").attributeName(dataBean.getRow().get(0)).build();
+                        List<AttributeVo> attributeVoList = graphCommonService.executeJson(NebulaUtil.showAttributeInfo(graphShowInfo), AttributeVo.class);
+                        AttributeVo attributeVoSon = attributeVoList.get(0);
+                        dataBean.getRow().add(JSONUtil.toJsonStr(attributeVoSon));
+                    });
+                    attributeVo.getColumns().add("sonEdgeAttributeVo");
+                });
+            }
+        }
+        return list;
+    }
+
 
     /**
      * @return java.util.List<com.hoteamsoft.common.vo.CommonVo>
@@ -81,9 +137,9 @@ public class AttributeService {
     }
 
     /**
+     * @return java.util.List<com.hoteamsoft.common.vo.AttributeVo>
      * @Description 属性的子属性查询
      * @Param [graphShowInfo]
-     * @return java.util.List<com.hoteamsoft.common.vo.AttributeVo>
      **/
     public List<AttributeVo> showAttributeInfo(GraphShowInfo graphShowInfo) {
         List<AttributeVo> attributeVoList = graphCommonService.executeJson(NebulaUtil.showAttributeInfo(graphShowInfo), AttributeVo.class);
@@ -108,7 +164,46 @@ public class AttributeService {
             String value = datum.getRow().get(0);
             valueList.add(value);
         }
-        stringListHashMap.put(key,valueList);
+        stringListHashMap.put(key, valueList);
         attributeVo.setFieldMap(stringListHashMap);
+    }
+
+
+
+    public List<AttributeVo> showCreateAttributeInfo(GraphShowInfo graphShowInfo) {
+        List<AttributeVo> attributeVoList = graphCommonService.executeJson(NebulaUtil.showCreateAttributeInfo(graphShowInfo), AttributeVo.class);
+        if (CollUtil.isNotEmpty(attributeVoList)) {
+            for (AttributeVo attributeVo : attributeVoList) {
+                for (AttributeVo.DataBean datum : attributeVo.getData()) {
+                    attributeVo.getColumns().add("comment");
+                    String row = datum.getRow().get(1);
+                    String substring = row.substring(row.lastIndexOf(",") + 1);
+                    if (StrUtil.isNotBlank(substring)) {
+                        String replaceAll = substring.replace("=", ":");
+                        String result = "{" + replaceAll + "}";
+                        Map map = JSONUtil.toBean(JSONUtil.toJsonStr(result), Map.class);
+                        if (map.containsKey("comment")) {
+                            Object comment = map.get("comment");
+                            datum.getRow().add(comment.toString());
+                        } else {
+                            datum.getRow().add("");
+                        }
+                    }
+                    //List<GraphTag> graphTagList = graphTagService.queryBySpace(graphShowInfo.getSpace());
+                    //if (CollUtil.isNotEmpty(graphTagList)) {
+                    //    attributeVo.getColumns().add("color");
+                    //    Map<String, GraphTag> tagMap = graphTagList.stream().collect(Collectors.toMap(GraphTag::getTagName, Function.identity()));
+                    //    String tagName = datum.getRow().get(0);
+                        //GraphTag graphTag = tagMap.get(tagName);
+                        //if (ObjectUtil.isNotNull(graphTag)) {
+                        //    datum.getRow().add(graphTag.getColor());
+                        //} else {
+                        //    datum.getRow().add("");
+                        //}
+                    //}
+                }
+            }
+        }
+        return attributeVoList;
     }
 }
